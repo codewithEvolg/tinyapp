@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 3002;
 
@@ -22,6 +23,7 @@ const urlDatabase = {
 //define middlewares here
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 //display existing urls
 app.get("/urls", (req, res) => {
@@ -63,6 +65,12 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]; //grap the id parameter and delete from the urlDatabase object
   res.redirect('/urls'); //redirec to the /url api
+});
+
+//login route
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body);
+  res.redirect('/urls');
 });
 
 app.get("/urls.json", (req, res) => {
