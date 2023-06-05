@@ -23,34 +23,46 @@ const urlDatabase = {
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
 
+//display existing urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("pages/urls_index", templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
-  res.render("pages/urls_new");
-});
-
+//create new urls and assign random 6 char id
 app.post("/urls", (req, res) => {
   const id  = generateRandomString(); //generate a random 6 character string
   urlDatabase[id] = req.body.longURL; //retrieve the longUrl and add to urlDatabase object
   res.redirect(`/urls/${id}`) //redirect to show short and long urls once short url has been generated
 });
 
+//create new urls
+app.get("/urls/new", (req, res) => {
+  res.render("pages/urls_new");
+});
+
+//show a particular and update url if needed
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("pages/urls_show", templateVars);
 });
 
+//update an existing url and redirect to /Urls page
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.newLongName;
+  res.redirect('/urls');
+});
+
+//launch actually long url
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
+//delete existing url
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  delete urlDatabase[req.params.id]; //grap the id parameter and delete from the urlDatabase object
+  res.redirect('/urls'); //redirec to the /url api
 });
 
 app.get("/urls.json", (req, res) => {
