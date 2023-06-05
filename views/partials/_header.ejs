@@ -26,9 +26,12 @@
         <button type="submit" class="btn btn-outline-dark mb-2">Login</button>
       </form>
     <% } else { %>
-      <div class="form-group mx-sm-3 mb-2">
-        <h2>Logged in as: <%= username.username %></h2>
-      </div>
+      <form class="form-inline" action="/logout" method="post">
+        <div class="form-group mx-sm-3 mb-2">
+          <h2>Logged in as: <%= username.username %></h2>
+        </div>
+        <button type="submit" class="btn btn-outline-dark mb-2">Logout</button>
+      </form>
 
     <% } %>
   </nav>
