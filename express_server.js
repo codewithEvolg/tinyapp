@@ -27,7 +27,7 @@ app.use(cookieParser());
 
 //display existing urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("pages/urls_index", templateVars);
 });
 
@@ -40,12 +40,13 @@ app.post("/urls", (req, res) => {
 
 //create new urls
 app.get("/urls/new", (req, res) => {
-  res.render("pages/urls_new");
+  const templateVars = { username: req.cookies["username"] };
+  res.render("pages/urls_new", templateVars);
 });
 
 //show a particular and update url if needed
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
   res.render("pages/urls_show", templateVars);
 });
 
@@ -69,6 +70,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 //login route
 app.post("/login", (req, res) => {
+  //const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.cookie('username', req.body);
   res.redirect('/urls');
 });
