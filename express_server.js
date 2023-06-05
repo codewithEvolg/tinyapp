@@ -33,7 +33,6 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
   const id  = generateRandomString(); //generate a random 6 character string
   urlDatabase[id] = req.body.longURL; //retrieve the longUrl and add to urlDatabase object
   res.redirect(`/urls/${id}`) //redirect to show short and long urls once short url has been generated
@@ -47,6 +46,11 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
 });
 
 app.get("/urls.json", (req, res) => {
