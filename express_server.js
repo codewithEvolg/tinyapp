@@ -59,6 +59,10 @@ app.get("/urls", (req, res) => {
 
 //create new urls and assign random 6 char id
 app.post("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  if (!userId) {
+    return res.send('You are not logged in. please log in and try again.');
+  }
   const id  = generateRandomString(); //generate a random 6 character string
   urlDatabase[id] = req.body.longURL; //retrieve the longUrl and add to urlDatabase object
   res.redirect(`/urls/${id}`) //redirect to show short and long urls once short url has been generated
@@ -67,6 +71,9 @@ app.post("/urls", (req, res) => {
 //create new urls
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
+  if (!userId) {
+    return res.redirect('/login');
+  }
   const templateVars = { user: users[userId] };
   res.render("pages/urls_new", templateVars);
 });
@@ -92,6 +99,10 @@ app.post("/urls/:id", (req, res) => {
 //launch actually long url
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  console.log(longURL);
+  if (!longURL) {
+    return res.send('sorry, Url does not exist!')
+  }
   res.redirect(longURL);
 });
 
@@ -104,6 +115,9 @@ app.post("/urls/:id/delete", (req, res) => {
 // Register route
 app.get("/register", (req, res) => {
   const userId = req.cookies["user_id"];
+  if (userId) {
+    res.redirect("/urls");
+  }
   const templateVars = {user: users[userId]};
   res.render("pages/user_register", templateVars);
 });
@@ -136,6 +150,9 @@ app.post('/register', (req, res) => {
 //login get route
 app.get('/login', (req, res) => {
   const userId = req.cookies["user_id"];
+  if (userId) {
+    res.redirect("/urls");
+  }
   const templateVars = {user: users[userId]};
   res.render("pages/user_login", templateVars);
 });
