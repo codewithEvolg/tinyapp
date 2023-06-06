@@ -34,6 +34,17 @@ function generateRandomString() {
     return result;
 }
 
+const getUserByEmail = (email) => {
+  let foundUser = null;
+  for (const user in users) {
+    if (email === users[user].email) {
+      foundUser = users[user];
+      return foundUser;
+    }
+  }
+  return foundUser;
+}
+
 //define middlewares here
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
@@ -111,9 +122,17 @@ app.get("/register", (req, res) => {
 
 // // API Register
 app.post('/register', (req, res) => {
-  const id = generateRandomString();
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send("Invalid credentials!");
+  }
+  
+  const userExist = getUserByEmail(email);
+  if (userExist) {
+    return res.status(400).send("User already exist!");
+  }
 
+  const id = generateRandomString();
   //const hashedPassword = bcrypt.hashSync(password, 8);
 
   users[id] = {
@@ -121,8 +140,8 @@ app.post('/register', (req, res) => {
     email,
     password,
   };
-  res.cookie('user_id', id);
   console.log(users);
+  res.cookie('user_id', id);
   res.redirect('/urls');
 });
 
