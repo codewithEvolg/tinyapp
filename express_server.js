@@ -101,15 +101,10 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect('/urls'); //redirec to the /url api
 });
 
-//login route
-app.post("/login", (req, res) => {
-  //const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.cookie('username', req.body);
-  res.redirect('/urls');
-});
+
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -144,6 +139,19 @@ app.post('/register', (req, res) => {
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
+
+app.get('/login', (req, res) => {
+  const userId = req.cookies["user_id"];
+  const templateVars = {user: users[userId]};
+  res.render("pages/user_login", templateVars);
+});
+
+// //login route
+// app.post("/login", (req, res) => {
+//   //const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+//   res.cookie('username', req.body);
+//   res.redirect('/urls');
+// });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);

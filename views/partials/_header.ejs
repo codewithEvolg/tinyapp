@@ -18,18 +18,18 @@
       </div>
     </div>
     <%if (!user) { %>
-      <form class="form-inline" action="/login" method="post">
-        <div class="form-group mx-sm-3 mb-2">
-          <label for="inputPassword2" class="sr-only">Password</label>
-          <input type="text" class="form-control" placeholder="Username" name="username" >
-        </div>
-        <button type="submit" class="btn btn-outline-dark mb-2">Login</button>
-      </form>
+        <a href="/login">
+          Login
+        </a>
+     &nbsp; | &nbsp; 
+      <a href="/register">
+        Register
+      </a>
     <% } else { %>
       <form class="form-inline" action="/logout" method="post">
-        <div class="form-group mx-sm-3 mb-2">
+        <!-- <div class="form-group mx-sm-3 mb-2">
           <h2>Logged in as: <%= user.email %></h2>
-        </div>
+        </div> -->
         <button type="submit" class="btn btn-outline-dark mb-2">Logout</button>
       </form>
 
