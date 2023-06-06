@@ -98,17 +98,10 @@ app.get("/u/:id", (req, res) => {
 //delete existing url
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]; //grap the id parameter and delete from the urlDatabase object
-  res.redirect('/urls'); //redirec to the /url api
+  res.redirect('/urls'); //redirect to the /url api
 });
 
-
-
-app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
-  res.redirect('/urls');
-});
-
-// Register
+// Register route
 app.get("/register", (req, res) => {
   const userId = req.cookies["user_id"];
   const templateVars = {user: users[userId]};
@@ -135,23 +128,39 @@ app.post('/register', (req, res) => {
     email,
     password,
   };
-  console.log(users);
+  
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
 
+//login get route
 app.get('/login', (req, res) => {
   const userId = req.cookies["user_id"];
   const templateVars = {user: users[userId]};
   res.render("pages/user_login", templateVars);
 });
 
-// //login route
-// app.post("/login", (req, res) => {
-//   //const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-//   res.cookie('username', req.body);
-//   res.redirect('/urls');
-// });
+//login post route
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const user = getUserByEmail(email);
+  if (!user) {
+    return res.status(403).send("User does not exist!");
+  }
+
+  if (password !== user.password) {
+    return res.status(403).send("Invalid credentials!");
+  }
+
+  res.cookie('user_id', user.id);
+  res.redirect('/urls');
+});
+
+//logout
+app.post("/logout", (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/login');
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
