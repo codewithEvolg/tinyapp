@@ -1,5 +1,5 @@
 const express = require('express');
-const cookieParser = require('cookie-parser')
+var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 3002;
@@ -52,16 +52,6 @@ const getUserByEmail = (email) => {
   return foundUser;
 }
 
-const isUrlAvailable = (url) => {
-  let urlFound = false;
-  for (const objId in urlDatabase) {
-    if (objId === url) {
-      urlFound = true;
-    }
-  }
-  return urlFound;
-}
-
 const urlsForUser = (id) => {
   let urls = {};
   for (const url in urlDatabase) {
@@ -84,11 +74,16 @@ const isUserUrl = (shortUrl, id) => {
 //define middlewares here
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+  // Cookie Options
+  maxAge: 10 * 60 * 1000, // 10 min
+}))
 
 //display existing urls
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.send("You need to log in first!")
   }
@@ -100,7 +95,7 @@ app.get("/urls", (req, res) => {
 
 //create new urls and assign random 6 char id
 app.post("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.send('You are not logged in. please log in and try again.');
   }
@@ -111,7 +106,7 @@ app.post("/urls", (req, res) => {
 
 //create new urls
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.redirect('/login');
   }
@@ -123,19 +118,10 @@ app.get("/urls/new", (req, res) => {
 
 //show a particular and update url if needed
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.send('You are not logged in!');
   }
-
-  // if (!isUserUrl(req.params.id, userId)) {
-  //   return res.send('You are not authorized to view url!')
-  // }
-
-  // if (!isUrlAvailable(req.params.id)) {
-  //   return res.send("Invalid Url!");
-  // }
-
 
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL,
     user: users[userId]
@@ -146,7 +132,7 @@ app.get("/urls/:id", (req, res) => {
 
 //update an existing url and redirect to /Urls page
 app.post("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   if (!isUserUrl(req.params.id, userId)) {
     return res.send('You are not authorized to perform this operation!')
@@ -166,7 +152,7 @@ app.get("/u/:id", (req, res) => {
 
 //delete existing url
 app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   if (!isUserUrl(req.params.id, userId)) {
     return res.send('You are not authorized to perform the delete operation!')
@@ -177,7 +163,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Register route
 app.get("/register", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (userId) {
     res.redirect("/urls");
   }
@@ -206,13 +192,13 @@ app.post('/register', (req, res) => {
     password : hashedPassword,
   };
 
-  res.cookie('user_id', id);
+  req.session.user_id = users[id].id;
   res.redirect('/urls');
 });
 
 //login get route
 app.get('/login', (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (userId) {
     res.redirect("/urls");
   }
@@ -231,14 +217,13 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Invalid credentials!");
   }
-
-  res.cookie('user_id', user.id);
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
 //logout
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/login');
 });
 
