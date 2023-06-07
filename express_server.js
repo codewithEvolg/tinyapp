@@ -5,21 +5,27 @@ const PORT = 3002;
 
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "a@example.com",
     password: "123",
   },
-  user2RandomID: {
-    id: "user2RandomID",
+  k7dso4: {
+    id: "k7dso4",
     email: "b@example.com",
     password: "456",
   },
 };
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "k7dso4",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 function generateRandomString() {
@@ -45,6 +51,26 @@ const getUserByEmail = (email) => {
   return foundUser;
 }
 
+const isUrlAvailable = (url) => {
+  let urlFound = false;
+  for (const objId in urlDatabase) {
+    if (objId === url) {
+      urlFound = true;
+    }
+  }
+  return urlFound;
+}
+
+const urlsForUser = (id) => {
+  let urls = {};
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      urls[url] = urlDatabase[url];
+    }
+  }
+  return urls;
+}
+
 //define middlewares here
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
@@ -53,7 +79,11 @@ app.use(cookieParser());
 //display existing urls
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
-  const templateVars = { urls: urlDatabase, user: users[userId]};
+  if (!userId) {
+    return res.send("You need to log in first!")
+  }
+  const urlForUser = urlsForUser(userId);
+  const templateVars = { urls: urlForUser, user: users[userId]};
   res.render("pages/urls_index", templateVars);
 });
 
@@ -64,7 +94,7 @@ app.post("/urls", (req, res) => {
     return res.send('You are not logged in. please log in and try again.');
   }
   const id  = generateRandomString(); //generate a random 6 character string
-  urlDatabase[id] = req.body.longURL; //retrieve the longUrl and add to urlDatabase object
+  urlDatabase[id] = { longURL : req.body.longURL, userId : userId} //retrieve the longUrl & userId and add to urlDatabase object
   res.redirect(`/urls/${id}`) //redirect to show short and long urls once short url has been generated
 });
 
@@ -80,10 +110,14 @@ app.get("/urls/new", (req, res) => {
 
 //show a particular and update url if needed
 app.get("/urls/:id", (req, res) => {
+
+  if (!isUrlAvailable(req.params.id)) {
+    return res.send("Invalid Url!");
+  }
+  
   const userId = req.cookies["user_id"];
 
-  const templateVars = { id: req.params.id, 
-    longURL: urlDatabase[req.params.id], 
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, 
     user: users[userId] 
   };
 
@@ -98,8 +132,7 @@ app.post("/urls/:id", (req, res) => {
 
 //launch actually long url
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  console.log(longURL);
+  const longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {
     return res.send('sorry, Url does not exist!')
   }
