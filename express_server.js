@@ -1,6 +1,7 @@
 const express = require('express');
 var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
+const {getUserByEmail} = require("./helpers")
 const app = express();
 const PORT = 3002;
 
@@ -39,17 +40,6 @@ function generateRandomString() {
       counter += 1;
     }
     return result;
-}
-
-const getUserByEmail = (email) => {
-  let foundUser = null;
-  for (const user in users) {
-    if (email === users[user].email) {
-      foundUser = users[user];
-      return foundUser;
-    }
-  }
-  return foundUser;
 }
 
 const urlsForUser = (id) => {
@@ -178,7 +168,7 @@ app.post('/register', (req, res) => {
     return res.status(400).send("Invalid credentials!");
   }
 
-  const userExist = getUserByEmail(email);
+  const userExist = getUserByEmail(email, users);
   if (userExist) {
     return res.status(400).send("User already exist!");
   }
@@ -209,7 +199,7 @@ app.get('/login', (req, res) => {
 //login post route
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
   if (!user) {
     return res.status(403).send("User does not exist!");
   }
