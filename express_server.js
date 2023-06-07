@@ -71,6 +71,15 @@ const urlsForUser = (id) => {
   return urls;
 }
 
+const isUserUrl = (shortUrl, id) => {
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === id && url === shortUrl) {
+      return true;
+    }
+  }
+  return false;
+}
+
 //define middlewares here
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }));
@@ -110,12 +119,19 @@ app.get("/urls/new", (req, res) => {
 
 //show a particular and update url if needed
 app.get("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
+  if (!userId) {
+    return res.send('You are not logged in!');
+  }
+
+  if (!isUserUrl(req.params.id, userId)) {
+    return res.send('You are not authorized to view url!')
+  }
 
   if (!isUrlAvailable(req.params.id)) {
     return res.send("Invalid Url!");
   }
   
-  const userId = req.cookies["user_id"];
 
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, 
     user: users[userId] 
@@ -126,6 +142,11 @@ app.get("/urls/:id", (req, res) => {
 
 //update an existing url and redirect to /Urls page
 app.post("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
+
+  if (!isUserUrl(req.params.id, userId)) {
+    return res.send('You are not authorized to perform this operation!')
+  }
   urlDatabase[req.params.id] = req.body.newLongName;
   res.redirect('/urls');
 });
@@ -141,6 +162,11 @@ app.get("/u/:id", (req, res) => {
 
 //delete existing url
 app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.cookies["user_id"];
+
+  if (!isUserUrl(req.params.id, userId)) {
+    return res.send('You are not authorized to perform the delete operation!')
+  }
   delete urlDatabase[req.params.id]; //grap the id parameter and delete from the urlDatabase object
   res.redirect('/urls'); //redirect to the /url api
 });
