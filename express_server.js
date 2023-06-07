@@ -1,5 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 3002;
 
@@ -92,6 +93,7 @@ app.get("/urls", (req, res) => {
     return res.send("You need to log in first!")
   }
   const urlForUser = urlsForUser(userId);
+
   const templateVars = { urls: urlForUser, user: users[userId]};
   res.render("pages/urls_index", templateVars);
 });
@@ -103,7 +105,7 @@ app.post("/urls", (req, res) => {
     return res.send('You are not logged in. please log in and try again.');
   }
   const id  = generateRandomString(); //generate a random 6 character string
-  urlDatabase[id] = { longURL : req.body.longURL, userId : userId} //retrieve the longUrl & userId and add to urlDatabase object
+  urlDatabase[id] = { longURL : req.body.longURL, userID : userId} //retrieve the longUrl & userId and add to urlDatabase object
   res.redirect(`/urls/${id}`) //redirect to show short and long urls once short url has been generated
 });
 
@@ -113,6 +115,8 @@ app.get("/urls/new", (req, res) => {
   if (!userId) {
     return res.redirect('/login');
   }
+
+  
   const templateVars = { user: users[userId] };
   res.render("pages/urls_new", templateVars);
 });
@@ -124,17 +128,17 @@ app.get("/urls/:id", (req, res) => {
     return res.send('You are not logged in!');
   }
 
-  if (!isUserUrl(req.params.id, userId)) {
-    return res.send('You are not authorized to view url!')
-  }
+  // if (!isUserUrl(req.params.id, userId)) {
+  //   return res.send('You are not authorized to view url!')
+  // }
 
-  if (!isUrlAvailable(req.params.id)) {
-    return res.send("Invalid Url!");
-  }
-  
+  // if (!isUrlAvailable(req.params.id)) {
+  //   return res.send("Invalid Url!");
+  // }
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, 
-    user: users[userId] 
+
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL,
+    user: users[userId]
   };
 
   res.render("pages/urls_show", templateVars);
@@ -187,21 +191,21 @@ app.post('/register', (req, res) => {
   if (!email || !password) {
     return res.status(400).send("Invalid credentials!");
   }
-  
+
   const userExist = getUserByEmail(email);
   if (userExist) {
     return res.status(400).send("User already exist!");
   }
 
   const id = generateRandomString();
-  //const hashedPassword = bcrypt.hashSync(password, 8);
+  const hashedPassword = bcrypt.hashSync(password, 8);
 
   users[id] = {
     id,
     email,
-    password,
+    password : hashedPassword,
   };
-  
+
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
@@ -224,7 +228,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("User does not exist!");
   }
 
-  if (password !== user.password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Invalid credentials!");
   }
 
