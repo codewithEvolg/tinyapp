@@ -1,0 +1,25 @@
+const users = {
+  aJ48lW: {
+    id: "aJ48lW",
+    email: "a@example.com",
+    password: "123",
+  },
+  k7dso4: {
+    id: "k7dso4",
+    email: "b@example.com",
+    password: "456",
+  },
+};
+
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "k7dso4",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
+};
+
+module.exports = {users, urlDatabase };

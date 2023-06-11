@@ -1,65 +1,10 @@
 const express = require('express');
 var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
-const {getUserByEmail} = require("./helpers")
+const {getUserByEmail, generateRandomString, urlsForUser, isUserUrl} = require("./helpers")
+const {users, urlDatabase} = require("./dbObjects")
 const app = express();
 const PORT = 3002;
-
-
-const users = {
-  aJ48lW: {
-    id: "aJ48lW",
-    email: "a@example.com",
-    password: "123",
-  },
-  k7dso4: {
-    id: "k7dso4",
-    email: "b@example.com",
-    password: "456",
-  },
-};
-
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "k7dso4",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-function generateRandomString() {
-  let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < 6) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
-    }
-    return result;
-}
-
-const urlsForUser = (id) => {
-  let urls = {};
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      urls[url] = urlDatabase[url];
-    }
-  }
-  return urls;
-}
-
-const isUserUrl = (shortUrl, id) => {
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === id && url === shortUrl) {
-      return true;
-    }
-  }
-  return false;
-}
 
 //define middlewares here
 app.set('view engine', 'ejs')
@@ -77,7 +22,7 @@ app.get("/urls", (req, res) => {
   if (!userId) {
     return res.send("You need to log in first!")
   }
-  const urlForUser = urlsForUser(userId);
+  const urlForUser = urlsForUser(userId, urlDatabase);
 
   const templateVars = { urls: urlForUser, user: users[userId]};
   res.render("pages/urls_index", templateVars);
@@ -124,10 +69,11 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
 
-  if (!isUserUrl(req.params.id, userId)) {
+  if (!isUserUrl(req.params.id, userId, urlDatabase)) {
     return res.send('You are not authorized to perform this operation!')
   }
-  urlDatabase[req.params.id] = req.body.newLongName;
+  urlDatabase[req.params.id] = { longURL: req.body.newLongName, userID: userId } ;
+  console.log(urlDatabase);
   res.redirect('/urls');
 });
 
@@ -144,7 +90,7 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const userId = req.session.user_id;
 
-  if (!isUserUrl(req.params.id, userId)) {
+  if (!isUserUrl(req.params.id, userId, urlDatabase)) {
     return res.send('You are not authorized to perform the delete operation!')
   }
   delete urlDatabase[req.params.id]; //grap the id parameter and delete from the urlDatabase object
