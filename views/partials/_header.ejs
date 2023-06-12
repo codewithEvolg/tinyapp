@@ -27,9 +27,9 @@
       </a>
     <% } else { %>
       <form class="form-inline" action="/logout" method="post">
-        <!-- <div class="form-group mx-sm-3 mb-2">
-          <h2>Logged in as: <%= user.email %></h2>
-        </div> -->
+        <div class="form-group mx-sm-3 mb-2">
+          <h4>Logged in as: <%= user.email %></h4>
+        </div>
         <button type="submit" class="btn btn-outline-dark mb-2">Logout</button>
       </form>
 

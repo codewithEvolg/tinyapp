@@ -16,6 +16,10 @@ app.use(cookieSession({
   maxAge: 10 * 60 * 1000, // 10 min
 }))
 
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
+
 //display existing urls
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
@@ -46,7 +50,6 @@ app.get("/urls/new", (req, res) => {
     return res.redirect('/login');
   }
 
-  
   const templateVars = { user: users[userId] };
   res.render("pages/urls_new", templateVars);
 });
@@ -56,6 +59,10 @@ app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
     return res.send('You are not logged in!');
+  }
+
+  if (!isUserUrl(req.params.id, userId, urlDatabase)) {
+    return res.send('You are not authorized to perform this operation!')
   }
 
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL,
@@ -72,8 +79,8 @@ app.post("/urls/:id", (req, res) => {
   if (!isUserUrl(req.params.id, userId, urlDatabase)) {
     return res.send('You are not authorized to perform this operation!')
   }
+
   urlDatabase[req.params.id] = { longURL: req.body.newLongName, userID: userId } ;
-  console.log(urlDatabase);
   res.redirect('/urls');
 });
 
